@@ -1,35 +1,211 @@
+const fs = require("fs");
+const inquirer = require("inquirer");
+const util = require("util");
+const generateHTML = require("./lib/generateHTML");
+const writeFileAsync = util.promisify(fs.writeFile);
+// const pdf = require('html-pdf');
+
 const Manager = require("./lib/Manager");
 const Engineer = require("./lib/Engineer");
 const Intern = require("./lib/Intern");
-const inquirer = require("inquirer");
-const path = require("path");
-const fs = require("fs");
 
-const OUTPUT_DIR = path.resolve(__dirname, "output");
-const outputPath = path.join(OUTPUT_DIR, "team.html");
-
-const render = require("./lib/htmlRenderer");
+const teamArr = [];
 
 
-// Write code to use inquirer to gather information about the development team members,
-// and to create objects for each team member (using the correct classes as blueprints!)
+const quesManager = [
+  {
+    type: "input",
+    message: "What is the manager's name?",
+    name: "name"
+  },
+  {
+    type: "input",
+    message: "What is your ID?",
+    name: "id"
+  },
+  {
+    type: "input",
+    message: "What is your Email?",
+    name: "email"
+  },
+  {
+    type: "input",
+    message: "What is your office number?",
+    name: "officeNumber"
+  }
+];
 
-// After the user has input all employees desired, call the `render` function (required
-// above) and pass in an array containing all employee objects; the `render` function will
-// generate and return a block of HTML including templated divs for each employee!
+const quesEngineer = [
+  {
+    type: "input",
+    message: "What is engineer's name?",
+    name: "name"
+  },
+  {
+    type: "input",
+    message: "What is your ID?",
+    name: "id"
+  },
+  {
+    type: "input",
+    message: "What is your Email?",
+    name: "email"
+  },
+  {
+    type: "input",
+    message: "What is your Github username?",
+    name: "github"
+  }
+];
 
-// After you have your html, you're now ready to create an HTML file using the HTML
-// returned from the `render` function. Now write it to a file named `team.html` in the
-// `output` folder. You can use the variable `outputPath` above target this location.
-// Hint: you may need to check if the `output` folder exists and create it if it
-// does not.
+const quesIntern = [
+  {
+    type: "input",
+    message: "What is the intern's name?",
+    name: "name"
+  },
+  {
+    type: "input",
+    message: "What is the intern's ID?",
+    name: "id"
+  },
+  {
+    type: "input",
+    message: "What is the intern's Email?",
+    name: "email"
+  },
+  {
+    type: "input",
+    message: "What is the intern's school?",
+    name: "school"
+  }
+];
 
-// HINT: each employee type (manager, engineer, or intern) has slightly different
-// information; write your code to ask different questions via inquirer depending on
-// employee type.
+//----------prompt
 
-// HINT: make sure to build out your classes first! Remember that your Manager, Engineer,
-// and Intern classes should all extend from a class named Employee; see the directions
-// for further information. Be sure to test out each class and verify it generates an
-// object with the correct structure and methods. This structure will be crucial in order
-// for the provided `render` function to work! ```
+function promptManager() {
+    inquirer
+      .prompt(quesManager)
+      .then(function (input) {
+        console.log("manager");
+        const manager = new Manager(input.name, input.id, input.email, input.officeNumber)
+        teamArr.push(manager);
+
+        createTeam();
+      });
+  }
+  
+  
+  function promptEngineer() {
+    inquirer
+      .prompt(quesEngineer)
+      .then(function (input) {
+
+        const engineer = new Engineer(input.name, input.id, input.email, input.gitName)
+        teamArr.push(engineer);
+
+        createTeam();
+      });
+  }
+
+  function promptIntern() {
+    inquirer
+      .prompt(quesIntern)
+      .then(function (input) {
+
+        const intern = new Intern(input.name, input.id, input.email, input.school);
+        teamArr.push(intern);
+
+        createTeam();
+      });
+  }
+
+  //-----createTeam
+
+  function createTeam() {
+
+    const createTeamMember = [
+      {
+        type: "list",
+        message: "Which member do you want to add?",
+        name: "role",
+        choices: [
+          "Engineer",
+          "Intern",
+          "Finish Create Team" 
+        ]
+      }];
+
+    inquirer
+      .prompt(createTeamMember)
+      .then(function (input) {
+        console.log(input);
+
+        if (input.role === "Engineer") {
+          promptEngineer();
+        }
+        if (input.role === "Intern") {
+          promptIntern();
+        }
+        else if (input.role === "Finish Create Team") {
+          console.log(teamArr); 
+          
+          getHtmlTeam();
+
+          return;
+        }
+          
+      });
+  }
+
+  promptManager();
+
+
+let html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+      <meta charset="UTF-8">
+      <title>Team</title>
+      <!-- Latest compiled and minified CSS & JS -->
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+      <script src="https://code.jquery.com/jquery.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+      <script src="https://kit.fontawesome.com/4d07055d3e.js" crossorigin=“anonymous”></script>
+      <style>
+          .shadow {
+              box-shadow: 5px 5px 5px grey;
+          }
+      </style>
+  </head>
+  <body>
+      <div class="container-fluid p-0 mb-0">
+          <div class="jumbotron jumbotron-fluid bg-danger text-light">
+              <div class="container text-center">
+                  <h1 class="display-4">My Team</h1>
+              </div>
+          </div>
+          <div class="container">
+              <div class="row justify-content-center" id="cards">
+  `;
+
+
+  let close = `
+        </div> 
+        </div> 
+      </body>
+    </html>;`
+
+  function getHtmlTeam() {
+  
+    for ( let i=0 ; i < teamArr.length; i++) {
+      const card = generateHTML(teamArr[i]);
+      html += card;
+    } 
+    html += close; 
+
+    writeFileAsync("./output/team.html", html);
+    
+  };
+
